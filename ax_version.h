@@ -1,0 +1,6 @@
+#pragma once
+
+#define ALTYN_VERSION_MAJOR 1
+#define ALTYN_VERSION_MINOR 1
+#define ALTYN_VERSION_PATCH 1
+

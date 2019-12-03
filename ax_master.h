@@ -1,0 +1,3 @@
+#pragma once
+
+#define MASTER_PUBKEY "049b2c9b9dca338b7be754c7693c15f5a32fe79d4730ee39af4e13edca1ba02a"
