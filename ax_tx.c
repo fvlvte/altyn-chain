@@ -4,19 +4,20 @@
 #include "ax_user.h"
 #include "ax_master.h"
 #include "ax_kernel.h"
+#include "ax_hmap.h"
 
 #include <stdlib.h>
 #include <time.h>
 
 struct ax_txmgr
 {
-	int  dict;
+	map_void_t txdict;
 };
-//static struct ax_txmgr GLOBAL;
+static struct ax_txmgr GLOBAL;
 
 void ax_txmgr_init()
 {
-	//GLOBAL.dict = ax_dict_new(1024*1024);
+	map_init(&GLOBAL.txdict);
 }
 
 int ax_tx_getSizeNoMac(const ax_tx* in)
@@ -52,12 +53,12 @@ ax_tx* ax_txmgr_new(int type)
 	return ret;
 }
 
-
 ax_tx* ax_txmgr_get(void* hash)
 {
-	//ax_dict_find(GLOBAL.dict, hash, 32);
-	//return (ax_tx*)*GLOBAL.dict->value;
-	return NULL;
+	void** k = map_get(&GLOBAL.txdict, hash);
+	if (k == NULL)
+		return NULL;
+	return (ax_tx*)*k;
 }
 
 int ax_tx_getHash(const ax_tx* in, void* out)
@@ -159,8 +160,7 @@ int ax_txmgr_put(const ax_tx* in)
 	uint8_t buffer[32];
 
 	ax_tx_getHash(in, buffer);
-	//ax_dict_add(GLOBAL.dict, buffer, 32);
-	//*GLOBAL.dict->value = (void*)in;
+	map_set(&GLOBAL.txdict, buffer, in);
 
 	return 0;
 }

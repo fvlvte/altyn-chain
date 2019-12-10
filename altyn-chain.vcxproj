@@ -78,6 +78,7 @@
   <ItemGroup>
     <ClCompile Include="ax_api.c" />
     <ClCompile Include="ax_block.c" />
+    <ClCompile Include="ax_chain.c" />
     <ClCompile Include="ax_crypto.c" />
     <ClCompile Include="ax_hmap.c" />
     <ClCompile Include="ax_kernel.c" />
@@ -90,8 +91,10 @@
     <ClCompile Include="ax_user.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="altyn_constants.h" />
     <ClInclude Include="ax_api.h" />
     <ClInclude Include="ax_block.h" />
+    <ClInclude Include="ax_chain.h" />
     <ClInclude Include="ax_crypto.h" />
     <ClInclude Include="ax_hmap.h" />
     <ClInclude Include="ax_kernel.h" />

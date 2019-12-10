@@ -1,6 +1,7 @@
 #pragma once
 #include "ax_tx.h"
 #include "ax_crypto.h"
+#include "ax_hmap.h"
 
 #include <stdint.h>
 

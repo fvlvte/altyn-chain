@@ -17,11 +17,13 @@ struct ax_user
 {
 	uint32_t id;
 	uint16_t wallet_count;
+	uint32_t sequenceId;
 	uint8_t auth[64];
 	ax_user_wallet wallets[WALLET_MAX];
 };
 typedef struct ax_user ax_user;
 
+int ax_user_getSequenceId(unsigned int index);
 int ax_user_commitTran(ax_tx* tran);
 int ax_useridx_getMacPub(void* out, uint32_t index);
 void ax_useridx_init(void);

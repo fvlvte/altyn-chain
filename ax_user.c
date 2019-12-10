@@ -11,15 +11,43 @@ enum
 	TYPE_SUB
 };
 
+enum
+{
+	FLAG_MOD = 0b1
+};
+
 struct ax_user_index
 {
 	uint64_t	max;
 	ax_user**	idx;
+	ax_user**	idxcp;
+	uint64_t	flags;
 };
 typedef struct ax_user_index ax_user_index;
 ax_user_index GLOBAL_INDEX;
 
 const __uint128_t ONE_HIGH = ((__uint128_t)0x0000000000000001 << 64) | 0x00000000;
+
+static inline void _ax_user_commitState(unsigned int index)
+{
+	if (GLOBAL_INDEX.idxcp[index] == NULL || GLOBAL_INDEX.idx[index] == NULL)
+		return;
+
+	memcpy(GLOBAL_INDEX.idx[index], GLOBAL_INDEX.idxcp[index], sizeof(ax_user));
+}
+
+static inline void _ax_user_cloneState(unsigned int index)
+{
+	if (GLOBAL_INDEX.idx[index] == NULL)
+		return;
+
+	if (GLOBAL_INDEX.idxcp[index] == NULL)
+	{
+		GLOBAL_INDEX.idxcp[index] = malloc(sizeof(ax_user));
+	}
+
+	memcpy(GLOBAL_INDEX.idxcp[index], GLOBAL_INDEX.idx[index], sizeof(ax_user));
+}
 
 static inline ax_user_wallet* _ax_user_getWallet(uint16_t currency_id, ax_user* user)
 {
@@ -121,6 +149,8 @@ int ax_user_commitTran(ax_tx* tran)
 			if (user == NULL)
 				user = ax_useridx_alloc(bm->user_id);
 
+			user->sequenceId++;
+
 			return _ax_user_alterWallet(bm->currency_id, user, TYPE_ADD, bm->balance_high, bm->balance_low);	
 		}
 		case TX_BALANCE_OUT:
@@ -133,6 +163,8 @@ int ax_user_commitTran(ax_tx* tran)
 				AX_LOG_ERRO("User (%d) balance does not exist.", bm->user_id);
 				return __LINE__;
 			}
+
+			user->sequenceId++;
 
 			return _ax_user_alterWallet(bm->currency_id, user, TYPE_SUB, bm->balance_high, bm->balance_low);
 		}
@@ -180,6 +212,9 @@ int ax_user_commitTran(ax_tx* tran)
 			_ax_user_alterWallet(bm->maker_currency_id, maker, TYPE_SUB, bm->maker_fee_high, bm->maker_fee_low);
 			_ax_user_alterWallet(bm->taker_currency_id, maker, TYPE_ADD, bm->taker_balance_high, bm->taker_balance_low);
 
+			maker->sequenceId++;
+			taker->sequenceId++;
+
 			return 0;
 		}
 	}
@@ -192,13 +227,20 @@ void ax_useridx_init(void)
 {
 	GLOBAL_INDEX.max = USER_MAX;
 	GLOBAL_INDEX.idx = calloc(1, USER_MAX * sizeof(ax_user*));
+	GLOBAL_INDEX.idxcp = calloc(1, USER_MAX * sizeof(ax_user*));
 
 	if (GLOBAL_INDEX.idx == NULL)
 	{
 		AX_LOG_CRIT("!!! Failed to allocate user index. !!!");
 		abort();
 	}
-}
+
+	if (GLOBAL_INDEX.idxcp == NULL)
+	{
+		AX_LOG_CRIT("!!! Failed to allocate user copy index. !!!");
+		abort();
+	}
+} 
 
 ax_user* ax_useridx_get(uint32_t index)
 {
@@ -208,12 +250,12 @@ ax_user* ax_useridx_get(uint32_t index)
 		return NULL;
 	}
 
-	return GLOBAL_INDEX.idx[index];
+	return GLOBAL_INDEX.idxcp[index];
 }
 
 int ax_useridx_getMacPub(void* out, uint32_t index)
 {
-	if (GLOBAL_INDEX.idx[index] != NULL)
+	if (GLOBAL_INDEX.idxcp[index] != NULL)
 	{
 		memcpy(out, GLOBAL_INDEX.idx[index]->auth, sizeof(GLOBAL_INDEX.idx[index]->auth));
 		return 0;
@@ -227,6 +269,7 @@ ax_user* ax_useridx_alloc(uint32_t index)
 	assert(GLOBAL_INDEX.max > index && GLOBAL_INDEX.idx[index] == NULL);
 
 	GLOBAL_INDEX.idx[index] = calloc(sizeof(ax_user), 1);
+	GLOBAL_INDEX.idxcp[index] = calloc(sizeof(ax_user), 1);
 
 	if (GLOBAL_INDEX.idx[index] == NULL)
 	{
@@ -235,7 +278,21 @@ ax_user* ax_useridx_alloc(uint32_t index)
 	}
 
 	GLOBAL_INDEX.idx[index]->id = index;
+	GLOBAL_INDEX.idxcp[index]->id = index;
 
-	return GLOBAL_INDEX.idx[index];
+	return GLOBAL_INDEX.idxcp[index];
 }
 
+int ax_user_getSequenceId(unsigned int index)
+{
+	if (index >= GLOBAL_INDEX.max)
+	{
+		AX_LOG_ERRO("!!! User index too high (%d). !!!", index);
+		return NULL;
+	}
+
+	if (GLOBAL_INDEX.idxcp[index] == NULL)
+		return 0;
+
+	return GLOBAL_INDEX.idxcp[index]->sequenceId;
+}

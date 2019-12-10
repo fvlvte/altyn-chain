@@ -1,6 +1,9 @@
 #include "ax_api.h"
 #include "ax_kernel.h"
 #include "ax_log.h"
+#include "ax_tx.h"
+#include "ax_user.h"
+#include "altyn_constants.h"
 
 #include <unistd.h>
 #include <sys/socket.h>
@@ -16,7 +19,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <arpa/inet.h>
-#include "ax_tx.h"
 
 #include <string.h>
 
@@ -109,11 +111,12 @@ static void _ax_apiGetSignedTx(struct ax_api_client* client, uint8_t* path, uint
 	uint8_t* currncy = param;
 	uint8_t* user = NULL;
 	uint8_t* value = NULL;
-
 	char *out = malloc(256);
-
 	int iuser, ivalue, icurrency;
 
+	if (param == NULL)
+		return _ax_api_sendResponseString(client, "No params.");
+	
 	while (*param != '$')
 		param++;
 
@@ -146,6 +149,7 @@ static void _ax_apiGetSignedTx(struct ax_api_client* client, uint8_t* path, uint
 	AX_LOG_TRAC("%d, %d, %d", iuser, ivalue, icurrency);
 
 	altyn_mmp_push(ax_kernel_getMempool(), (ax_tx*)mod);
+	ax_user_commitTran((ax_tx*)mod);
 
 	_ax_api_sendResponseString(client, out);
 	free(out);
@@ -163,6 +167,43 @@ static void _ax_apiGetMempool(struct ax_api_client* client, uint8_t* path, uint8
 	_ax_api_sendResponseString(client, out);
 
 	free(out);
+}
+
+static void _ax_apiGetUserBalanceAll(struct ax_api_client* client, uint8_t* path, uint8_t* param)
+{
+	char outBuff[1024];
+	char hexbuff[256];
+	int offset = 0;
+	int userId;
+	int i;
+
+	if (param == NULL)
+	{
+		return _ax_api_sendResponseString(client, "Invalid call.");
+	}
+
+	userId = atoi(param);
+
+	ax_user* user = ax_useridx_get((unsigned int)userId);
+
+	if (user == NULL)
+	{
+		return _ax_api_sendResponseString(client, "{}");
+	}
+
+	outBuff[0] = '{';
+	offset = 1;
+
+	for (i = 0; i < user->wallet_count; i++)
+	{
+		offset += sprintf(outBuff + offset, "\"%s\":\"%s\",", CURRENCY_NAME_TABLE[user->wallets[i].currency_id], user->wallets[i].balance_low);
+	}
+
+	outBuff[offset - 1] = '}';
+	outBuff[offset] = 0x00;
+
+	_ax_api_sendResponseString(client, outBuff);
+
 }
 
 static void _ax_api_dispatcher(struct ax_api_client* client, uint8_t* buffer, int len)
@@ -210,6 +251,8 @@ static void _ax_api_dispatcher(struct ax_api_client* client, uint8_t* buffer, in
 		return _ax_apiGetMempool(client, buffer, param);
 	else if (strcmp(buffer, "/tx/broadcast") == 0)
 		return _ax_apiBroadcastTx(client, buffer, param);
+	else if (strcmp(buffer, "/user/balance/all") == 0)
+		return _ax_apiGetUserBalanceAll(client, buffer, param);
 	else
 	{
 		_ax_api_sendResponseString(client, "pizdziec");

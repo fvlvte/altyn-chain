@@ -166,7 +166,6 @@ int ax_verisig(unsigned char* data, unsigned int dataLen, const uint8_t* pubkey,
 
 	if (eckey == NULL)
 	{
-		AX_LOG_ERRO("Failed to create EC key.");
 		ret = __LINE__;
 		goto CLEANUP;
 	}
@@ -177,14 +176,12 @@ int ax_verisig(unsigned char* data, unsigned int dataLen, const uint8_t* pubkey,
 
 	if (ecgroup == NULL)
 	{
-		AX_LOG_ERRO("Failed to create EC group.");
 		ret = __LINE__;
 		goto CLEANUP;
 	}
 
 	if (EC_KEY_set_group(eckey, ecgroup) != 1)
 	{
-		AX_LOG_ERRO("Failed to bind group to the key.");
 		ret = __LINE__;
 		goto CLEANUP;
 	}
@@ -192,7 +189,6 @@ int ax_verisig(unsigned char* data, unsigned int dataLen, const uint8_t* pubkey,
 	pub = EC_POINT_new(ecgroup);
 	if(EC_POINT_oct2point(ecgroup, pub, pubkey, 65, NULL) == 0)
 	{
-		AX_LOG_ERRO("Failed to convert out point.");
 		ret = __LINE__;
 		goto CLEANUP;
 	}
@@ -204,7 +200,6 @@ int ax_verisig(unsigned char* data, unsigned int dataLen, const uint8_t* pubkey,
 
 	if (ECDSA_do_verify(data, (int)dataLen, signature, eckey) != 1)
 	{
-		AX_LOG_ERRO("Failed to verify signature.");
 		ret = __LINE__;
 		goto CLEANUP;
 	}

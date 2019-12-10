@@ -11,9 +11,9 @@ enum
 
 struct ax_tx
 {
-	uint32_t type;
+	uint16_t type;
 	uint64_t lock;
-	uint16_t nonce;
+	uint32_t nonce; // Order.
 } __attribute__((__packed__));
 typedef struct ax_tx ax_tx;
 
@@ -25,6 +25,8 @@ struct ax_tx_mac
 struct ax_tx_balance_mod
 {
 	struct ax_tx header;
+
+	uint32_t sequence;
 
 	uint32_t user_id;
 	uint16_t currency_id;
@@ -48,11 +50,13 @@ struct ax_tx_pair
 {
 	struct ax_tx header;
 
+	uint32_t taker_sequence;
 	uint32_t taker_user_id;
 	uint16_t taker_currency_id;
 	uint64_t taker_balance_low;
 	uint32_t taker_balance_high;
 
+	uint32_t maker_sequence;
 	uint32_t maker_user_id;
 	uint16_t maker_currency_id;
 	uint64_t maker_balance_low;
