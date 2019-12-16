@@ -8,7 +8,7 @@
 
 void ax_node_save(const ax_node* node)
 {
-	FILE* f = fopen("node.bin", "wb");
+	FILE* f = fopen("/node/node.bin", "wb");
 
 	if (f == NULL || fwrite(node, sizeof(*node), 1, f) != 1)
 	{
@@ -39,7 +39,7 @@ void ax_node_gen(ax_node* out)
 
 void ax_node_init(ax_node* out)
 {
-	FILE* f = fopen("node.bin", "rb");
+	FILE* f = fopen("/node/node.bin", "rb");
 
 	if (f == NULL)
 	{

@@ -4,6 +4,7 @@
 #include "ax_user.h"
 #include "ax_crypto.h"
 #include "ax_block.h"
+#include "ax_sbs.h"
 
 #include <unistd.h>
 #include <time.h>
@@ -21,6 +22,7 @@ uint8_t tbl[] =
 void hexfmt(uint8_t* in, unsigned int len)
 {
 	uint8_t* tmp = malloc(1024 * 1024 * 16);
+	uint8_t tmp1, tmp2;
 
 	unsigned int i;
 
@@ -30,6 +32,33 @@ void hexfmt(uint8_t* in, unsigned int len)
 		tmp[i * 2 + 1] = tbl[in[i] % 16];
 	}
 
+	if (len == 16)
+	{
+		for (i = 0; i < 4; i++)
+		{
+			tmp1 = tmp[i*2];
+			tmp2 = tmp[i * 2 + 1];
+
+			tmp[i*2] = tmp[15 - i * 2 - 1];
+			tmp[i * 2 + 1] = tmp[15 - i * 2];
+
+			tmp[15 - i * 2 - 1] = tmp1;
+			tmp[15 - i * 2] = tmp2;
+		}
+
+		for (i = 0; i < 4; i++)
+		{
+			tmp1 = tmp[16 + i * 2];
+			tmp2 = tmp[16 + i * 2 + 1];
+
+			tmp[16 + i * 2] = tmp[16 + 15 - (i * 2) - 1];
+			tmp[16 + i * 2 + 1] = tmp[16 + 15 - (i * 2)];
+
+			tmp[16 + 15 - (i * 2) - 1] = tmp1;
+			tmp[16 + 15 - (i * 2)] = tmp2;
+		}
+	}
+	
 	tmp[len * 2] = 0;
 	memcpy(in, tmp, len * 2 + 1);
 	free(tmp);
@@ -156,6 +185,10 @@ int ax_kernel_worker(ax_kernel* instance)
 
 	ax_node_init(&GLOBAL.self);
 	ax_useridx_init();
+
+	ax_sbs_init();
+
+	ax_block_getGenesis();
 
 	if (clock_gettime(0, &instance->last) != 0)
 	{

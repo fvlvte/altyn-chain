@@ -68,7 +68,7 @@ static void _ax_apiGetNodePublicKey(struct ax_api_client* client, uint8_t* path,
 
 	ax_kernel_getNodePubkey(pubKey);
 
-	sprintf(responseBuffer, "{\"key\":\"0x%s\"}", pubKey);
+	sprintf(responseBuffer, "{\"key\":\"%s\"}", pubKey);
 
 	_ax_api_sendResponseString(client, responseBuffer);
 }
@@ -112,7 +112,8 @@ static void _ax_apiGetSignedTx(struct ax_api_client* client, uint8_t* path, uint
 	uint8_t* user = NULL;
 	uint8_t* value = NULL;
 	char *out = malloc(256);
-	int iuser, ivalue, icurrency;
+	int iuser, icurrency;
+	long long ivalue;
 
 	if (param == NULL)
 		return _ax_api_sendResponseString(client, "No params.");
@@ -131,7 +132,7 @@ static void _ax_apiGetSignedTx(struct ax_api_client* client, uint8_t* path, uint
 
 	iuser = atoi(user);
 	icurrency = atoi(currncy);
-	ivalue = atoi(value);
+	ivalue = atoll(value);
 
 	ax_tx_balance_mod* mod = malloc(sizeof(*mod));
 	mod->header.lock = (uint64_t)(time(NULL));
@@ -196,7 +197,11 @@ static void _ax_apiGetUserBalanceAll(struct ax_api_client* client, uint8_t* path
 
 	for (i = 0; i < user->wallet_count; i++)
 	{
-		offset += sprintf(outBuff + offset, "\"%s\":\"%s\",", CURRENCY_NAME_TABLE[user->wallets[i].currency_id], user->wallets[i].balance_low);
+		memcpy(hexbuff, &user->wallets[i].balance_high, 8);
+		memcpy(hexbuff + 8, &user->wallets[i].balance_low, 8);
+		hexfmt(hexbuff, 16);
+
+		offset += sprintf(outBuff + offset, "\"%s\":\"0x%s\",", CURRENCY_NAME_TABLE[user->wallets[i].currency_id], hexbuff);
 	}
 
 	outBuff[offset - 1] = '}';

@@ -87,6 +87,7 @@
     <ClCompile Include="ax_mempool.c" />
     <ClCompile Include="ax_node.c" />
     <ClCompile Include="ax_p2p.c" />
+    <ClCompile Include="ax_sbs.c" />
     <ClCompile Include="ax_tx.c" />
     <ClCompile Include="ax_user.c" />
   </ItemGroup>
@@ -103,6 +104,7 @@
     <ClInclude Include="ax_mempool.h" />
     <ClInclude Include="ax_node.h" />
     <ClInclude Include="ax_p2p.h" />
+    <ClInclude Include="ax_sbs.h" />
     <ClInclude Include="ax_tx.h" />
     <ClInclude Include="ax_user.h" />
     <ClInclude Include="ax_version.h" />

@@ -6,7 +6,8 @@ enum
 {
 	TX_BALANCE_IN = 0,
 	TX_BALANCE_OUT,
-	TX_PAIR
+	TX_PAIR,
+	TX_MASTER
 };
 
 struct ax_tx
@@ -21,6 +22,16 @@ struct ax_tx_mac
 {
 	uint8_t sig[64];
 } __attribute__((__packed__));
+
+struct ax_tx_master
+{
+	ax_tx header;
+
+	uint8_t pubkey[65];
+
+	struct ax_tx_mac mac;
+
+};
 
 struct ax_tx_balance_mod
 {

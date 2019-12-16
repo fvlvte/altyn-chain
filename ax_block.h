@@ -36,6 +36,8 @@ struct ax_block
 typedef struct ax_block ax_block;
 
 ax_block* ax_block_alloc();
+ax_block* ax_block_getGenesis(void);
+int ax_block_getHash(ax_block* block, void* out);
 void ax_block_putTx(ax_block* block, ax_tx* tx);
 void ax_block_free(ax_block* block);
 void ax_block_save(ax_block* block);

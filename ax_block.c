@@ -1,8 +1,10 @@
 #include "ax_block.h"
 #include "ax_log.h"
+#include "ax_kernel.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ax_master.h"
 
 ax_block* ax_block_alloc()
 {
@@ -98,6 +100,7 @@ void ax_block_save(ax_block* block)
 	while (*ar != NULL)
 	{
 		unsigned int size = 0;
+
 		switch ((*ar)->type)
 		{
 		case TX_BALANCE_IN:
@@ -139,6 +142,8 @@ void ax_block_save(ax_block* block)
 			size = sizeof(ax_tx_balance_mod);
 		case TX_PAIR:
 			size = sizeof(ax_tx_pair);
+		case TX_MASTER:
+			size = sizeof(struct ax_tx_master);
 		}
 
 		fwrite(*ar, (size_t)size, 1, f);
@@ -155,6 +160,33 @@ void ax_block_save(ax_block* block)
 	fwrite(sig, 64, 1, f);
 
 	fclose(f);
+}
+
+ax_block* ax_block_getGenesis(void)
+{
+	ax_block* blk = ax_block_alloc();
+	ax_node* n = ax_kernel_getSelfNode();
+
+	blk->height = 0;
+	memset(blk->prevHash, 0, 32);
+	blk->flags = 0;
+	memset(blk->miner, 0, 65);
+	blk->nonce = 0x534B414D;
+	blk->timestamp = 1575989947;
+	
+	struct ax_tx_master* tx = (struct ax_tx_master*)ax_txmgr_new(TX_MASTER);
+
+	tx->header.lock = 1575989947;
+	tx->header.nonce = 0x4A554843;
+	tx->header.type = TX_MASTER;
+
+	hextobuf(MASTER_PUBKEY + 2, tx->pubkey);
+
+	ax_tx_sign((ax_tx*)tx, n->secret);
+
+	ax_block_putTx(blk, (ax_tx*)tx);
+
+	ax_block_save(blk);
 }
 
 void ax_block_free(ax_block* block)

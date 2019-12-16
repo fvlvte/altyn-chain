@@ -42,6 +42,11 @@ ax_tx* ax_txmgr_new(int type)
 			ret = malloc(sizeof(ax_tx_pair));
 			break;
 		}
+		case TX_MASTER:
+		{
+			ret = malloc(sizeof(struct ax_tx_master));
+			break;
+		}
 		default:
 		{
 			AX_LOG_CRIT("Invalid transaction type.");
@@ -82,6 +87,8 @@ static struct ax_tx_mac* _ax_tx_getMac(ax_tx* tx)
 		return &((ax_tx_balance_mod*)tx)->mac;
 	case TX_PAIR:
 		return &((ax_tx_pair*)tx)->mac;
+	case TX_MASTER:
+		return &((struct ax_tx_master*)tx)->mac;
 	default:
 		AX_LOG_CRIT("Unsupported tx type %d.", tx->type);
 		abort();
@@ -102,6 +109,11 @@ static int _ax_tx_getAuthorizedKeys(ax_tx* tx, int* outtype, void* buffer, int* 
 		*outcount = 2;
 		ax_useridx_getMacPub(buffer, ((ax_tx_pair*)tx)->maker_user_id);
 		ax_useridx_getMacPub(buffer + 64, ((ax_tx_pair*)tx)->maker_user_id);
+		return 0;
+	case TX_MASTER:
+		*outtype = 1;
+		*outcount = 1;
+		hextobuf(MASTER_PUBKEY + 2, 65);
 		return 0;
 	default:
 		AX_LOG_CRIT("Unsupported tx type %d.", tx->type);
@@ -150,6 +162,8 @@ int ax_tx_getSize(const ax_tx* in)
 			return sizeof(ax_tx_balance_mod);
 		case TX_PAIR:
 			return sizeof(ax_tx_pair);
+		case TX_MASTER:
+			return sizeof(struct ax_tx_master);
 		default:
 			return -1;
 	}
@@ -179,6 +193,12 @@ int ax_tx_sign(const ax_tx* in, uint8_t* pk)
 	{
 		ax_tx_pair* tx = (ax_tx_pair*)in;
 		//ax_getpub(pk, 32, tx->mac.pub);
+		ax_tx_getHash(in, hash);
+		ax_makesig(hash, 32, pk, 32, tx->mac.sig, 65);
+	}
+	else if (in->type == TX_MASTER)
+	{
+		struct ax_tx_master* tx = (struct ax_tx_master*)in;
 		ax_tx_getHash(in, hash);
 		ax_makesig(hash, 32, pk, 32, tx->mac.sig, 65);
 	}
