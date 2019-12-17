@@ -18,7 +18,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+//#include </home/ubuntu/.wget-hsts>
 #include <arpa/inet.h>
+
 
 #include <string.h>
 
@@ -110,7 +112,7 @@ SEND:
 	send(client->socket, &r, sizeof(r), 0);
 }
 
-static void _ax_sbs_kazaluj(struct ax_api_client* client, struct _ax_sbs_header* h, uint8_t* buffer)
+static void _ax_sbs_kazaluj(struct ax_api_client* client, uint8_t* buffer, int len)
 {
 	int ret;
 	struct _ax_sbs_balanceMod * dupson = (struct _ax_sbs_balanceMod*)buffer;
@@ -149,7 +151,6 @@ static void _ax_sbs_dispatcher(struct ax_api_client* client, struct _ax_sbs_head
 		AX_LOG_ERRO("Unsupported operation.");
 		abort();
 	}
-
 }
 
 static void _ax_sbs_handler(struct ax_api_client* client)

@@ -303,7 +303,7 @@ void _ax_api_acceptor()
 	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo("0.0.0.0", "8080", &hints, &si);
+	getaddrinfo("0.0.0.0", "9999", &hints, &si);
 
 	s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
